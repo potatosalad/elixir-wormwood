@@ -21,4 +21,18 @@ defmodule Wormwood.GraphQL do
       raise("unable to find module: #{inspect(module)}")
     end
   end
+
+  def format_file!(file) when is_binary(file) do
+    string = File.read!(file)
+    format_string!(string)
+  end
+
+  def format_string!(binary) when is_binary(binary) do
+    sdl = Wormwood.SDL.decode!(binary)
+    Wormwood.SDL.encode(sdl)
+  end
+
+  def format_string!(list) when is_list(list) do
+    format_string!(:erlang.iolist_to_binary(list))
+  end
 end

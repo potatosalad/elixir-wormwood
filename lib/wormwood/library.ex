@@ -20,6 +20,114 @@ defmodule Wormwood.Library do
     []
   end
 
+  def extract_fragment(module, name) when is_atom(module) do
+    extract_fragment(%__MODULE__{} = module.__wormwood_library__(), name)
+  end
+
+  def extract_fragment(library = %__MODULE__{}, name) do
+    case lookup_fragment(library, name) do
+      fragment = %Wormwood.Language.Fragment{name: fragment_name} ->
+        seen = Map.new()
+        seen = Map.put(seen, fragment_name, fragment)
+        fragments = do_extract_fragment!(library, fragment, seen)
+        definitions = Enum.sort(Map.values(fragments))
+        %Wormwood.Language.Document{definitions: definitions}
+
+      nil ->
+        nil
+    end
+  end
+
+  @doc false
+  defp do_extract_fragment!(library = %__MODULE__{}, fragment, seen) do
+    {_, fragments} =
+      Wormwood.Traversal.reduce(fragment, seen, fn
+        fragment_spread = %Wormwood.Language.FragmentSpread{}, _parent, _path, acc ->
+          next_fragment = %Wormwood.Language.Fragment{name: fragment_name} = lookup_fragment(library, fragment_spread)
+
+          if Map.has_key?(acc, fragment_name) do
+            :cont
+          else
+            acc = Map.put(acc, fragment_name, next_fragment)
+            acc = do_extract_fragment!(library, next_fragment, acc)
+            {:skip, acc}
+          end
+
+        _node, _parent, _path, _acc ->
+          :cont
+      end)
+
+    fragments
+  end
+
+  def extract_operation(module, name) when is_atom(module) do
+    extract_operation(%__MODULE__{} = module.__wormwood_library__(), name)
+  end
+
+  def extract_operation(library = %__MODULE__{}, name) do
+    case lookup_operation(library, name) do
+      operation_definition = %Wormwood.Language.OperationDefinition{} ->
+        {_, fragments} =
+          Wormwood.Traversal.reduce(operation_definition, Map.new(), fn
+            fragment_spread = %Wormwood.Language.FragmentSpread{}, _parent, _path, acc ->
+              next_fragment = %Wormwood.Language.Fragment{name: fragment_name} = lookup_fragment(library, fragment_spread)
+
+              if Map.has_key?(acc, fragment_name) do
+                :cont
+              else
+                acc = Map.put(acc, fragment_name, next_fragment)
+                acc = do_extract_fragment!(library, next_fragment, acc)
+                {:skip, acc}
+              end
+
+            _node, _parent, _path, _acc ->
+              :cont
+          end)
+
+        definitions = Enum.sort(Map.values(fragments))
+        %Wormwood.Language.Document{definitions: [operation_definition | definitions]}
+
+      nil ->
+        nil
+    end
+  end
+
+  def lookup_directive(module, name) when is_atom(module) do
+    lookup_directive(%__MODULE__{} = module.__wormwood_library__(), name)
+  end
+
+  def lookup_directive(%__MODULE__{directives: directives}, name) do
+    Map.get(directives, name, nil)
+  end
+
+  def lookup_fragment(module, name) when is_atom(module) do
+    lookup_fragment(%__MODULE__{} = module.__wormwood_library__(), name)
+  end
+
+  def lookup_fragment(library = %__MODULE__{}, %Wormwood.Language.FragmentSpread{name: name}) do
+    lookup_fragment(library, name)
+  end
+
+  def lookup_fragment(%__MODULE__{fragments: fragments}, name) do
+    Map.get(fragments, name, nil)
+  end
+
+  def lookup_operation(module, name) when is_atom(module) do
+    lookup_operation(%__MODULE__{} = module.__wormwood_library__(), name)
+  end
+
+  def lookup_operation(%__MODULE__{operations: operations}, name) do
+    Map.get(operations, name, nil)
+  end
+
+  def lookup_type(module, name) when is_atom(module) do
+    module.__wormwood_type__(name)
+  end
+
+  def lookup_type(%__MODULE__{types: types}, name) do
+    Map.get(types, name, nil)
+  end
+
   @doc false
   def from_draft!(
         draft = %Wormwood.Library.Draft{
