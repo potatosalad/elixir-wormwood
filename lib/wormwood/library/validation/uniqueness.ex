@@ -16,6 +16,17 @@ defmodule Wormwood.Library.Validation.Uniqueness do
     end
   end
 
+  defmodule NoNameError do
+    @moduledoc false
+    defexception [:node]
+
+    import Wormwood.Library.Errors, only: [format_loc!: 1, format_mod!: 1]
+
+    def message(%__MODULE__{node: node}) do
+      "No name for #{format_mod!(node)} in #{format_loc!(node)}"
+    end
+  end
+
   @doc false
   def validate!(list) when is_list(list) do
     :ok = validate_no_more_than_one_schema!(list)

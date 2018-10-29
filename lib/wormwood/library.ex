@@ -195,26 +195,41 @@ defmodule Wormwood.Library do
 
   def import_operations!(library = %__MODULE__{operations: old_operations}, operations = [_ | _]) do
     new_operations =
-      Enum.reduce(operations, old_operations, fn new_operation = %Wormwood.Language.OperationDefinition{name: name}, acc ->
-        case Map.fetch(acc, name) do
-          {:ok, old_operation} ->
-            alias Wormwood.Library.Validation.Uniqueness.DuplicateError, as: DuplicateError
+      Enum.reduce(operations, old_operations, fn
+        new_operation = %Wormwood.Language.OperationDefinition{name: nil}, acc ->
+          alias Wormwood.Library.Validation.Uniqueness.NoNameError, as: NoNameError
 
-            errors = [
-              DuplicateError.exception(name: name, node: old_operation, subject: Wormwood.Language.subject(old_operation)),
-              DuplicateError.exception(name: name, node: new_operation, subject: Wormwood.Language.subject(new_operation))
-            ]
+          errors = [
+            NoNameError.exception(node: new_operation)
+          ]
 
-            raise(Wormwood.Library.CompilationError,
-              errors: errors,
-              reason: """
-              Operation definitions must be unique by name, but 2 duplicates were found.
-              """
-            )
+          raise(Wormwood.Library.CompilationError,
+            errors: errors,
+            reason: """
+            Operation definitions MUST be named, but 1 no name found.
+            """
+          )
 
-          :error ->
-            Map.put(acc, name, new_operation)
-        end
+        new_operation = %Wormwood.Language.OperationDefinition{name: name}, acc ->
+          case Map.fetch(acc, name) do
+            {:ok, old_operation} ->
+              alias Wormwood.Library.Validation.Uniqueness.DuplicateError, as: DuplicateError
+
+              errors = [
+                DuplicateError.exception(name: name, node: old_operation, subject: Wormwood.Language.subject(old_operation)),
+                DuplicateError.exception(name: name, node: new_operation, subject: Wormwood.Language.subject(new_operation))
+              ]
+
+              raise(Wormwood.Library.CompilationError,
+                errors: errors,
+                reason: """
+                Operation definitions MUST be unique by name, but 2 duplicates were found.
+                """
+              )
+
+            :error ->
+              Map.put(acc, name, new_operation)
+          end
       end)
 
     library = %__MODULE__{library | operations: new_operations}

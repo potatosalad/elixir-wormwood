@@ -80,6 +80,20 @@ defmodule Wormwood.Library.Notation do
     type_functions = build_type_functions(env, library)
 
     quote do
+      defmacro gql!(input) do
+        quote do
+          require Wormwood.GraphQL
+          Wormwood.GraphQL.gql!(unquote(__MODULE__), unquote(input))
+        end
+      end
+
+      defmacro operation!(name) do
+        quote do
+          require Wormwood.GraphQL
+          Wormwood.GraphQL.operation!(unquote(__MODULE__), unquote(name))
+        end
+      end
+
       def __wormwood_library__ do
         unquote(Macro.escape(library, unquote: true))
       end
