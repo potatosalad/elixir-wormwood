@@ -1,7 +1,7 @@
 defmodule Wormwood.MixProject do
   use Mix.Project
 
-  def project do
+  def project() do
     [
       app: :wormwood,
       version: "0.1.0",
@@ -12,17 +12,17 @@ defmodule Wormwood.MixProject do
   end
 
   # Run "mix help compile.app" to learn about applications.
-  def application do
+  def application() do
     [
-      extra_applications: [:logger]
+      extra_applications: []
     ]
   end
 
   # Run "mix help deps" to learn about dependencies.
-  defp deps do
+  defp deps() do
     [
-      # {:dep_from_hexpm, "~> 0.3.0"},
-      # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"},
+      {:nimble_parsec, "~> 0.4"},
+      {:ojson, "~> 1.0"}
     ]
   end
 end
