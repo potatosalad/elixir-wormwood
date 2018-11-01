@@ -1,19 +1,19 @@
 defmodule Wormwood.GraphQL do
   defmacro gql!(module, input) do
     module = Macro.expand(module, __CALLER__)
-    document = Macro.escape(do_gql!(__CALLER__, module, input))
+    operation = Macro.escape(do_gql!(__CALLER__, module, input))
 
     quote do
-      unquote(document)
+      unquote(operation)
     end
   end
 
   defmacro operation!(module, name) do
     module = Macro.expand(module, __CALLER__)
-    document = Macro.escape(do_operation!(__CALLER__, module, name))
+    operation = Macro.escape(do_operation!(__CALLER__, module, name))
 
     quote do
-      unquote(document)
+      unquote(operation)
     end
   end
 
@@ -35,14 +35,15 @@ defmodule Wormwood.GraphQL do
               operations: operations = [%{name: name}],
               fragments: fragments
             } ->
-              library = module.__wormwood_library__()
-              library = %{library | module: env.module}
-              library = Wormwood.Library.import_fragments!(library, fragments)
-              library = Wormwood.Library.import_operations!(library, operations)
-              extracted = %Wormwood.Language.Document{} = Wormwood.Library.extract_operation(library, name)
+              library = %Wormwood.Library{module: original_module} = module.__wormwood_library__()
+              operation_library = %{library | module: env.module}
+              operation_library = Wormwood.Library.import_fragments!(operation_library, fragments)
+              operation_library = Wormwood.Library.import_operations!(operation_library, operations)
+              extracted = %Wormwood.Language.Document{} = Wormwood.Library.extract_operation(operation_library, name)
               source = %{source | body: :erlang.iolist_to_binary(Wormwood.SDL.encode(extracted))}
               extracted = %{extracted | source: source}
-              extracted
+              library = %{operation_library | module: original_module}
+              Wormwood.Library.Operation.compile!(env, library, extracted)
           end
       end
     else
@@ -53,15 +54,16 @@ defmodule Wormwood.GraphQL do
   @doc false
   defp do_operation!(env, module, name) when is_atom(module) and is_binary(name) do
     if Code.ensure_loaded?(module) and function_exported?(module, :__wormwood_library__, 0) do
-      library = module.__wormwood_library__()
-      library = %{library | module: env.module}
+      library = %Wormwood.Library{module: original_module} = module.__wormwood_library__()
+      operation_library = %{library | module: env.module}
 
-      case Wormwood.Library.extract_operation(library, name) do
+      case Wormwood.Library.extract_operation(operation_library, name) do
         extracted = %Wormwood.Language.Document{} ->
           body = :erlang.iolist_to_binary(Wormwood.SDL.encode(extracted))
           source = %Wormwood.Language.Source{name: env.file, line: env.line, body: body}
           extracted = %{extracted | source: source}
-          extracted
+          library = %{operation_library | module: original_module}
+          Wormwood.Library.Operation.compile!(env, library, extracted)
       end
     else
       raise("unable to find module: #{inspect(module)}")

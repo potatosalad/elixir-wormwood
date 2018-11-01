@@ -1,6 +1,29 @@
 defmodule Wormwood.Library.Validation.FragmentTyped do
   @moduledoc false
 
+  defmodule AmbiguousFieldSelectionError do
+    @moduledoc false
+    defexception [:definition, :selection]
+
+    import Wormwood.Library.Errors, only: [format_loc!: 1, format_sdl!: 2]
+
+    def message(%__MODULE__{definition: definition, selection: selection}) do
+      """
+      Ambiguous field selection error in #{format_loc!(selection)}
+
+      Definition:
+
+        #{format_sdl!(definition, 2)}
+
+      Selection:
+
+        #{format_sdl!(selection, 2)}
+
+      See definition in #{format_loc!(definition)}
+      """
+    end
+  end
+
   defmodule EmptySelectionSetError do
     @moduledoc false
     defexception [:definition, :selection]
@@ -169,6 +192,8 @@ defmodule Wormwood.Library.Validation.FragmentTyped do
         Enum.each(fragments, fn fragment = %Wormwood.Language.Fragment{} ->
           :ok = validate_fragment!(library, fragment)
         end)
+
+      # :ok = Wormwood.Library.Validation.FragmentTypedConflict.validate!(library, fragments)
 
       :ok
     else

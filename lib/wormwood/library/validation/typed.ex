@@ -124,6 +124,92 @@ defmodule Wormwood.Library.Validation.Typed do
     false
   end
 
+  @doc """
+  Non-strict left-hand side while ignoring right-hand side strictness.
+
+  Equal:
+
+    * `Int  == Int`
+    * `Int! == Int!`
+    * `Int! != Int`
+    * `Int  != Int!`
+
+  Equivalent:
+
+    * `Int  ~~ Int`
+    * `Int! ~~ Int!`
+    * `Int! !~ Int`
+    * `Int  ~~ Int!`
+
+  """
+  def equivalent?(%Wormwood.Language.ListType{type: type1}, %Wormwood.Language.ListType{type: type2}) do
+    equivalent?(type1, type2)
+  end
+
+  def equivalent?(%Wormwood.Language.NonNullType{type: type1}, %Wormwood.Language.NonNullType{type: type2}) do
+    equivalent?(type1, type2)
+  end
+
+  def equivalent?(%Wormwood.Language.NamedType{name: name1}, %Wormwood.Language.NamedType{name: name2}) do
+    name1 === name2
+  end
+
+  def equivalent?(type1, %Wormwood.Language.NonNullType{type: type2}) do
+    equivalent?(type1, type2)
+  end
+
+  def equivalent?(_, _) do
+    false
+  end
+
+  @doc false
+  def flatten_related_objects!(library, type) do
+    interfaces_map = do_flatten_related_objects!(library, [type], Map.new())
+    Map.values(interfaces_map)
+  end
+
+  @doc false
+  defp do_flatten_related_objects!(library = %{types: types}, [head | tail], acc) do
+    case head do
+      type_reference = %Wormwood.Language.NamedType{} ->
+        {:ok, type} = validate_type_reference!(library, type_reference)
+        do_flatten_related_objects!(library, [type | tail], acc)
+
+      interface = %Wormwood.Language.InterfaceTypeDefinition{name: interface_name} ->
+        if Map.has_key?(acc, interface_name) do
+          do_flatten_related_objects!(library, tail, acc)
+        else
+          related_objects =
+            Enum.reduce(types, [], fn
+              {_, object = %Wormwood.Language.ObjectTypeDefinition{name: _object_name, interfaces: interfaces}}, related_objects ->
+                if Enum.any?(interfaces, fn %Wormwood.Language.NamedType{name: other_name} -> other_name === interface_name end) do
+                  [object | related_objects]
+                else
+                  related_objects
+                end
+
+              _, related_objects ->
+                related_objects
+            end)
+
+          acc = do_flatten_related_objects!(library, related_objects, Map.put(acc, interface_name, interface))
+          do_flatten_related_objects!(library, tail, acc)
+        end
+
+      %Wormwood.Language.ObjectTypeDefinition{name: object_name, interfaces: interfaces} ->
+        if Map.has_key?(acc, object_name) do
+          do_flatten_related_objects!(library, tail, acc)
+        else
+          acc = do_flatten_related_objects!(library, interfaces, acc)
+          do_flatten_related_objects!(library, tail, acc)
+        end
+    end
+  end
+
+  defp do_flatten_related_objects!(_library, [], acc) do
+    acc
+  end
+
   @doc false
   def resolve!(library, %Wormwood.Language.ListType{type: type_reference}) do
     resolve!(library, type_reference)

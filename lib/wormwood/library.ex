@@ -130,10 +130,10 @@ defmodule Wormwood.Library do
 
   @doc false
   def from_draft!(
-        draft = %Wormwood.Library.Draft{
+        _draft = %Wormwood.Library.Draft{
           module: module,
           schemas: schemas,
-          directives: directives,
+          directives: _directives,
           types: types,
           operations: operations,
           fragments: fragments
@@ -196,7 +196,7 @@ defmodule Wormwood.Library do
   def import_operations!(library = %__MODULE__{operations: old_operations}, operations = [_ | _]) do
     new_operations =
       Enum.reduce(operations, old_operations, fn
-        new_operation = %Wormwood.Language.OperationDefinition{name: nil}, acc ->
+        new_operation = %Wormwood.Language.OperationDefinition{name: nil}, _acc ->
           alias Wormwood.Library.Validation.Uniqueness.NoNameError, as: NoNameError
 
           errors = [

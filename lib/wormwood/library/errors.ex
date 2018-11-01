@@ -40,6 +40,10 @@ defmodule Wormwood.Library.Errors do
     format_loc!(loc)
   end
 
+  def format_loc!(%{loc: nil}) do
+    "(nofile)"
+  end
+
   @doc false
   def format_mod!(module) when is_atom(module) do
     :lists.last(Module.split(module))
@@ -62,18 +66,4 @@ defmodule Wormwood.Library.Errors do
   def format_sdl!(definition, depth) when is_integer(depth) and depth > 0 do
     definition |> format_sdl!() |> format_indent!(depth)
   end
-
-  # @doc false
-  # defp dump_expected!(type_reference = %{__struct__: module})
-  #      when module in [
-  #             Wormwood.Language.ListType,
-  #             Wormwood.Language.NonNullType,
-  #             Wormwood.Language.NamedType
-  #           ] do
-  #   :erlang.iolist_to_binary(Wormwood.SDL.encode(type_reference))
-  # end
-
-  # defp dump_expected!(%{name: name, loc: loc}) do
-  #   dump_expected!(%Wormwood.Language.NamedType{name: name, loc: loc})
-  # end
 end

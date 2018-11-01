@@ -77,6 +77,7 @@ defmodule Wormwood.Library.Notation do
 
     library = Wormwood.Library.Draft.build!([draft | drafts])
 
+    schema_functions = build_schema_functions(env, library)
     type_functions = build_type_functions(env, library)
 
     quote do
@@ -99,7 +100,34 @@ defmodule Wormwood.Library.Notation do
       end
 
       unquote_splicing(type_functions)
+      unquote_splicing(schema_functions)
     end
+  end
+
+  @doc false
+  defp build_schema_functions(env, %{schema: schema}) do
+    do_build_schema_functions(env, Map.to_list(schema), [])
+  end
+
+  @doc false
+  defp do_build_schema_functions(_env, [], functions) do
+    :lists.reverse([
+      quote do
+        def __wormwood_schema__(_), do: nil
+      end
+      | functions
+    ])
+  end
+
+  defp do_build_schema_functions(env, [{name, type_reference} | rest], functions) do
+    type_reference = Macro.escape(type_reference)
+
+    function =
+      quote do
+        def __wormwood_schema__(unquote(name)), do: __wormwood_type__(unquote(type_reference))
+      end
+
+    do_build_schema_functions(env, rest, [function | functions])
   end
 
   @doc false

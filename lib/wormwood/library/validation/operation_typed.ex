@@ -215,7 +215,7 @@ defmodule Wormwood.Library.Validation.OperationTyped do
       %Wormwood.Language.Variable{} ->
         %Wormwood.Language.VariableDefinition{type: variable_type_reference} = State.fetch_variable_definition!(state, value)
 
-        if Wormwood.Library.Validation.Typed.equal?(input_type_reference, variable_type_reference) do
+        if Wormwood.Library.Validation.Typed.equivalent?(input_type_reference, variable_type_reference) do
           :ok
         else
           alias Wormwood.Library.Validation.Typed.TypedValueError, as: TypedValueError
