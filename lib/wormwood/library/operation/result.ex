@@ -259,7 +259,7 @@ defmodule Wormwood.Library.Operation.Result do
             raise("expected #{inspect(field_key)} to be there, but it wasn't :-(")
         end
 
-      field = %Wormwood.Language.Field{alias: field_alias, name: field_name}, {prev_result, next_result} ->
+      field = %Wormwood.Language.Field{alias: field_alias, name: field_name, directives: directives}, {prev_result, next_result} ->
         field_key = if is_nil(field_alias), do: field_name, else: field_alias
 
         case :maps.take(field_key, prev_result) do
@@ -272,7 +272,12 @@ defmodule Wormwood.Library.Operation.Result do
             {prev_result, next_result}
 
           :error ->
-            raise("expected #{inspect(field_key)} to be there, but it wasn't :-(")
+            if is_nil(directives) or directives === [] do
+              raise("expected #{inspect(field_key)} to be there, but it wasn't :-(")
+            else
+              # If a directive is present, we have no way of knowing how the server will return the data for that field.
+              {prev_result, next_result}
+            end
         end
 
       fragment_spread = %Wormwood.Language.FragmentSpread{}, {prev_result, next_result} ->
