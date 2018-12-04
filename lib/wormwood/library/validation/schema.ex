@@ -239,6 +239,35 @@ defmodule Wormwood.Library.Validation.Schema do
   end
 
   @doc false
+  def validate_interface_type_definition!(
+        draft = %{types: all_types},
+        type = %Wormwood.Language.InterfaceTypeDefinition{name: name, fields: fields},
+        refs
+      ) do
+    refs = validate_field_definitions!(draft, type, fields, refs)
+
+    refs =
+      Enum.reduce(all_types, refs, fn
+        object_type = %Wormwood.Language.ObjectTypeDefinition{interfaces: interfaces = [_ | _]}, refs ->
+          is_interface_implementor =
+            Enum.any?(interfaces, fn %Wormwood.Language.NamedType{name: named_type} ->
+              named_type == name
+            end)
+
+          if is_interface_implementor do
+            maybe_validate_type_definition!(draft, object_type, refs)
+          else
+            refs
+          end
+
+        _, refs ->
+          refs
+      end)
+
+    refs
+  end
+
+  @doc false
   def validate_schema_definition!(
         draft = %{schemas: [schema_definition = %Wormwood.Language.SchemaDefinition{fields: fields = [_ | _]}], types: all_types}
       ) do
@@ -316,8 +345,8 @@ defmodule Wormwood.Library.Validation.Schema do
         refs = validate_input_value_definitions!(draft, type, fields, refs)
         refs
 
-      %Wormwood.Language.InterfaceTypeDefinition{fields: fields} ->
-        refs = validate_field_definitions!(draft, type, fields, refs)
+      %Wormwood.Language.InterfaceTypeDefinition{} ->
+        refs = validate_interface_type_definition!(draft, type, refs)
         refs
 
       %Wormwood.Language.ObjectTypeDefinition{fields: fields, interfaces: interfaces} ->
