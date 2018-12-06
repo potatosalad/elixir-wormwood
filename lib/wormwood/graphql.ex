@@ -64,6 +64,16 @@ defmodule Wormwood.GraphQL do
           extracted = %{extracted | source: source}
           library = %{operation_library | module: original_module}
           Wormwood.Library.Operation.compile!(env, library, extracted)
+
+        nil ->
+          errors = [Wormwood.Library.Operation.NotFoundError.exception(name: name, library: library)]
+
+          raise(Wormwood.Library.CompilationError,
+            errors: errors,
+            reason: """
+            Operations must be defined by name in order to use the #{inspect(module)}.operation!/1 macro.
+            """
+          )
       end
     else
       raise("unable to find module: #{inspect(module)}")

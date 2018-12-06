@@ -2,6 +2,27 @@ defmodule Wormwood.Library.Errors do
   @moduledoc false
 
   @doc false
+  def format_did_you_mean!(missing_key, available_keys) when is_binary(missing_key) and is_list(available_keys) do
+    suggestions = do_did_you_mean_suggestions(missing_key, available_keys)
+
+    case suggestions do
+      [] -> ""
+      [_ | _] -> :erlang.iolist_to_binary(["Did you mean one of:\n\n" | format_suggestions!(suggestions)])
+    end
+  end
+
+  @doc false
+  def format_did_you_mean!(missing_key, available_keys, 0) when is_binary(missing_key) and is_list(available_keys) do
+    format_did_you_mean!(missing_key, available_keys)
+  end
+
+  def format_did_you_mean!(missing_key, available_keys, depth)
+      when is_binary(missing_key) and is_list(available_keys) and is_integer(depth) and depth > 0 do
+    formatted = format_did_you_mean!(missing_key, available_keys)
+    format_indent!(formatted, depth)
+  end
+
+  @doc false
   def format_indent!(string, 0) when is_binary(string) do
     string
   end
@@ -65,5 +86,40 @@ defmodule Wormwood.Library.Errors do
 
   def format_sdl!(definition, depth) when is_integer(depth) and depth > 0 do
     definition |> format_sdl!() |> format_indent!(depth)
+  end
+
+  @did_you_mean_max_suggestions 5
+  @doc false
+  def format_suggestions!([]) do
+    ""
+  end
+
+  def format_suggestions!(suggestions = [_ | _]) do
+    iolist =
+      suggestions
+      |> Enum.sort(&(elem(&1, 0) >= elem(&2, 0)))
+      |> Enum.take(@did_you_mean_max_suggestions)
+      |> Enum.sort(&(elem(&1, 1) <= elem(&2, 1)))
+      |> Enum.map(fn {_, key} -> [" * ", inspect(key), ?\n] end)
+
+    :erlang.iolist_to_binary(iolist)
+  end
+
+  @doc false
+  def format_suggestions!(suggestions, 0) do
+    format_suggestions!(suggestions)
+  end
+
+  def format_suggestions!(suggestions, depth) when is_integer(depth) and depth > 0 do
+    suggestions |> format_suggestions!() |> format_indent!(depth)
+  end
+
+  @did_you_mean_threshold 0.77
+  @doc false
+  defp do_did_you_mean_suggestions(missing_key, available_keys) when is_binary(missing_key) and is_list(available_keys) do
+    for key <- available_keys,
+        distance = String.jaro_distance(missing_key, key),
+        distance >= @did_you_mean_threshold,
+        do: {distance, key}
   end
 end
