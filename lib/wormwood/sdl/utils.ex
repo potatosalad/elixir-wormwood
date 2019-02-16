@@ -45,7 +45,7 @@ defmodule Wormwood.SDL.Utils do
       ?",
       ?\n,
       for line <- lines, into: [] do
-        encoded = triple_quote_fix(OJSON.encode!(line), <<>>)
+        encoded = escape_triple_quote(line, <<>>)
         [indent, :binary.part(encoded, 1, byte_size(encoded) - 2), ?\n]
       end,
       indent,
@@ -57,15 +57,15 @@ defmodule Wormwood.SDL.Utils do
   end
 
   @doc false
-  defp triple_quote_fix(<<?\\, ?", ?\\, ?", ?\\, ?", rest::binary()>>, acc) do
-    triple_quote_fix(rest, <<acc::binary(), ?\\, ?", ?", ?">>)
+  defp escape_triple_quote(<<?", ?", ?", rest::binary()>>, acc) do
+    escape_triple_quote(rest, <<acc::binary(), ?\\, ?", ?", ?">>)
   end
 
-  defp triple_quote_fix(<<c, rest::binary()>>, acc) do
-    triple_quote_fix(rest, <<acc::binary(), c>>)
+  defp escape_triple_quote(<<c, rest::binary()>>, acc) do
+    escape_triple_quote(rest, <<acc::binary(), c>>)
   end
 
-  defp triple_quote_fix(<<>>, acc) do
+  defp escape_triple_quote(<<>>, acc) do
     acc
   end
 
