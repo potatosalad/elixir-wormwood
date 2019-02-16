@@ -36,33 +36,24 @@ defmodule Wormwood.SDL.Utils do
 
   def encode_description(description, _opts = %{depth: depth}) do
     indent = :binary.copy("  ", depth)
-    pattern = :binary.compile_pattern([<<?\r, ?\n>>, <<?\n>>, <<?\r>>])
+    lines = :binary.split(description, [<<?\r, ?\n>>, <<?\n>>, <<?\r>>], [:global])
 
-    case :binary.match(description, pattern) do
-      :nomatch ->
-        encoded = triple_quote_fix(OJSON.encode!(description), <<>>)
-        [indent, ?", ?", ?", :binary.part(encoded, 1, byte_size(encoded) - 2), ?", ?", ?", ?\n]
-
-      {_, _} ->
-        lines = :binary.split(description, pattern, [:global])
-
-        [
-          indent,
-          ?",
-          ?",
-          ?",
-          ?\n,
-          for line <- lines, into: [] do
-            encoded = triple_quote_fix(OJSON.encode!(line), <<>>)
-            [indent, :binary.part(encoded, 1, byte_size(encoded) - 2), ?\n]
-          end,
-          indent,
-          ?",
-          ?",
-          ?",
-          ?\n
-        ]
-    end
+    [
+      indent,
+      ?",
+      ?",
+      ?",
+      ?\n,
+      for line <- lines, into: [] do
+        encoded = triple_quote_fix(OJSON.encode!(line), <<>>)
+        [indent, :binary.part(encoded, 1, byte_size(encoded) - 2), ?\n]
+      end,
+      indent,
+      ?",
+      ?",
+      ?",
+      ?\n
+    ]
   end
 
   @doc false
