@@ -46,7 +46,7 @@ defmodule Wormwood.SDL.Utils do
       ?\n,
       for line <- lines, into: [] do
         encoded = escape_triple_quote(line, <<>>)
-        [indent, :binary.part(encoded, 1, byte_size(encoded) - 2), ?\n]
+        [indent, encoded, ?\n]
       end,
       indent,
       ?",
