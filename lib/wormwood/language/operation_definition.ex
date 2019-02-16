@@ -27,7 +27,7 @@ defimpl Wormwood.SDL.Encoder, for: Wormwood.Language.OperationDefinition do
           directives: directives,
           selection_set: selection_set
         },
-        depth
+        opts = %{depth: depth}
       ) do
     indent = :binary.copy("  ", depth)
 
@@ -35,9 +35,9 @@ defimpl Wormwood.SDL.Encoder, for: Wormwood.Language.OperationDefinition do
       indent,
       encode_operation(operation),
       Wormwood.SDL.Utils.encode_name(name),
-      encode_variable_definitions(variable_definitions, depth),
-      Wormwood.SDL.Utils.encode_directives(directives, depth),
-      Wormwood.SDL.Utils.encode_selection_set(selection_set, depth),
+      encode_variable_definitions(variable_definitions, opts),
+      Wormwood.SDL.Utils.encode_directives(directives, opts),
+      Wormwood.SDL.Utils.encode_selection_set(selection_set, opts),
       ?\n
     ]
   end
@@ -52,12 +52,12 @@ defimpl Wormwood.SDL.Encoder, for: Wormwood.Language.OperationDefinition do
   end
 
   @doc false
-  defp encode_variable_definitions(term, _depth) when is_nil(term) or term == [] do
+  defp encode_variable_definitions(term, _opts) when is_nil(term) or term == [] do
     []
   end
 
-  defp encode_variable_definitions(list = [_ | _], depth) do
-    [[?,, ?\s | head] | tail] = Enum.map(list, &[?,, ?\s, Wormwood.SDL.Encoder.encode(&1, depth)])
+  defp encode_variable_definitions(list = [_ | _], opts) do
+    [[?,, ?\s | head] | tail] = Enum.map(list, &[?,, ?\s, Wormwood.SDL.Encoder.encode(&1, opts)])
     [?(, head, tail, ?)]
   end
 end

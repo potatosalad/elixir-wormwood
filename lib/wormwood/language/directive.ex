@@ -13,11 +13,11 @@ defmodule Wormwood.Language.Directive do
 end
 
 defimpl Wormwood.SDL.Encoder, for: Wormwood.Language.Directive do
-  def encode(%@for{name: name, arguments: arguments}, depth) do
+  def encode(%@for{name: name, arguments: arguments}, opts) do
     [
       ?@,
       Wormwood.SDL.Utils.encode_name(name),
-      Wormwood.SDL.Utils.encode_arguments(arguments, depth)
+      Wormwood.SDL.Utils.encode_arguments(arguments, opts)
     ]
   end
 end

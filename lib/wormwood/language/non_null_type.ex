@@ -11,7 +11,7 @@ defmodule Wormwood.Language.NonNullType do
 end
 
 defimpl Wormwood.SDL.Encoder, for: Wormwood.Language.NonNullType do
-  def encode(%@for{type: type}, depth) do
-    [Wormwood.SDL.Encoder.encode(type, depth), ?!]
+  def encode(%@for{type: type}, opts) do
+    [Wormwood.SDL.Encoder.encode(type, opts), ?!]
   end
 end

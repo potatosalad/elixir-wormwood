@@ -11,7 +11,7 @@ defmodule Wormwood.Language.EnumValue do
 end
 
 defimpl Wormwood.SDL.Encoder, for: Wormwood.Language.EnumValue do
-  def encode(%@for{value: value}, _depth) do
+  def encode(%@for{value: value}, _opts) do
     to_string(value)
   end
 end

@@ -17,14 +17,14 @@ defmodule Wormwood.Language.EnumTypeDefinition do
 end
 
 defimpl Wormwood.SDL.Encoder, for: Wormwood.Language.EnumTypeDefinition do
-  def encode(%@for{description: description, name: name, directives: directives, values: values}, depth) do
-    {header, depth} = Wormwood.SDL.Utils.maybe_extend(description, "enum ", depth)
+  def encode(%@for{description: description, name: name, directives: directives, values: values}, opts) do
+    {header, opts} = Wormwood.SDL.Utils.maybe_extend(description, "enum ", opts)
 
     [
       header,
       Wormwood.SDL.Utils.encode_name(name),
-      Wormwood.SDL.Utils.encode_directives(directives, depth),
-      Wormwood.SDL.Utils.encode_enum_values(values, depth),
+      Wormwood.SDL.Utils.encode_directives(directives, opts),
+      Wormwood.SDL.Utils.encode_enum_values(values, opts),
       ?\n
     ]
   end

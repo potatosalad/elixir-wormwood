@@ -21,7 +21,7 @@ end
 defimpl Wormwood.SDL.Encoder, for: Wormwood.Language.Field do
   def encode(
         %@for{alias: field_alias, name: name, arguments: arguments, directives: directives, selection_set: selection_set},
-        depth
+        opts = %{depth: depth}
       ) do
     indent = :binary.copy("  ", depth)
 
@@ -29,9 +29,9 @@ defimpl Wormwood.SDL.Encoder, for: Wormwood.Language.Field do
       indent,
       encode_alias(field_alias),
       Wormwood.SDL.Utils.encode_name(name),
-      Wormwood.SDL.Utils.encode_arguments(arguments, depth),
-      Wormwood.SDL.Utils.encode_directives(directives, depth),
-      Wormwood.SDL.Utils.encode_selection_set(selection_set, depth),
+      Wormwood.SDL.Utils.encode_arguments(arguments, opts),
+      Wormwood.SDL.Utils.encode_directives(directives, opts),
+      Wormwood.SDL.Utils.encode_selection_set(selection_set, opts),
       ?\n
     ]
   end

@@ -13,12 +13,12 @@ defmodule Wormwood.Language.ObjectField do
 end
 
 defimpl Wormwood.SDL.Encoder, for: Wormwood.Language.ObjectField do
-  def encode(%@for{name: name, value: value}, depth) do
+  def encode(%@for{name: name, value: value}, opts) do
     [
       Wormwood.SDL.Utils.encode_name(name),
       ?:,
       ?\s,
-      Wormwood.SDL.Encoder.encode(value, depth)
+      Wormwood.SDL.Encoder.encode(value, opts)
     ]
   end
 end

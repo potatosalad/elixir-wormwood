@@ -15,13 +15,13 @@ defmodule Wormwood.Language.VariableDefinition do
 end
 
 defimpl Wormwood.SDL.Encoder, for: Wormwood.Language.VariableDefinition do
-  def encode(%@for{variable: variable = %{__struct__: _}, type: type = %{__struct__: _}, default_value: default_value}, depth) do
+  def encode(%@for{variable: variable = %{__struct__: _}, type: type = %{__struct__: _}, default_value: default_value}, opts) do
     [
-      Wormwood.SDL.Encoder.encode(variable, depth),
+      Wormwood.SDL.Encoder.encode(variable, opts),
       ?:,
       ?\s,
-      Wormwood.SDL.Encoder.encode(type, depth),
-      Wormwood.SDL.Utils.encode_default_value(default_value, depth)
+      Wormwood.SDL.Encoder.encode(type, opts),
+      Wormwood.SDL.Utils.encode_default_value(default_value, opts)
     ]
   end
 end

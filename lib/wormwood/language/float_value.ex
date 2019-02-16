@@ -13,7 +13,7 @@ defmodule Wormwood.Language.FloatValue do
 end
 
 defimpl Wormwood.SDL.Encoder, for: Wormwood.Language.FloatValue do
-  def encode(%@for{value: value}, _depth) do
+  def encode(%@for{value: value}, _opts) do
     OJSON.encode!(value)
   end
 end

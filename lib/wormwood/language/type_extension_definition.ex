@@ -11,7 +11,7 @@ defmodule Wormwood.Language.TypeExtensionDefinition do
 end
 
 defimpl Wormwood.SDL.Encoder, for: Wormwood.Language.TypeExtensionDefinition do
-  def encode(%@for{definition: definition = %{__struct__: _}}, depth) do
-    @protocol.encode(definition, {:extend, "extend ", depth})
+  def encode(%@for{definition: definition = %{__struct__: _}}, opts) do
+    @protocol.encode(definition, {:extend, "extend ", opts})
   end
 end

@@ -19,7 +19,16 @@ defmodule Wormwood.SDL do
   end
 
   def encode(language) do
-    Wormwood.SDL.Encoder.encode(language, 0)
+    Wormwood.SDL.Encoder.encode(language, %Wormwood.SDL.Encoder.Opts{depth: 0})
+  end
+
+  def encode(language, opts = %Wormwood.SDL.Encoder.Opts{}) do
+    Wormwood.SDL.Encoder.encode(language, opts)
+  end
+
+  def encode(language, opts) when is_list(opts) or is_map(opts) do
+    opts = %Wormwood.SDL.Encoder.Opts{} = Wormwood.SDL.Encoder.Opts.__struct__(opts)
+    encode(language, opts)
   end
 
   def prepare_source!(input) when is_binary(input) do

@@ -18,14 +18,14 @@ defmodule Wormwood.Language.InputObjectTypeDefinition do
 end
 
 defimpl Wormwood.SDL.Encoder, for: Wormwood.Language.InputObjectTypeDefinition do
-  def encode(%@for{description: description, name: name, directives: directives, fields: fields}, depth) do
-    {header, depth} = Wormwood.SDL.Utils.maybe_extend(description, "input ", depth)
+  def encode(%@for{description: description, name: name, directives: directives, fields: fields}, opts) do
+    {header, opts} = Wormwood.SDL.Utils.maybe_extend(description, "input ", opts)
 
     [
       header,
       Wormwood.SDL.Utils.encode_name(name),
-      Wormwood.SDL.Utils.encode_directives(directives, depth),
-      Wormwood.SDL.Utils.encode_field_definitions(fields, depth),
+      Wormwood.SDL.Utils.encode_directives(directives, opts),
+      Wormwood.SDL.Utils.encode_field_definitions(fields, opts),
       ?\n
     ]
   end

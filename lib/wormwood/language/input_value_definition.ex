@@ -22,18 +22,21 @@ defmodule Wormwood.Language.InputValueDefinition do
 end
 
 defimpl Wormwood.SDL.Encoder, for: Wormwood.Language.InputValueDefinition do
-  def encode(%@for{description: description, name: name, type: type, default_value: default_value, directives: directives}, depth) do
+  def encode(
+        %@for{description: description, name: name, type: type, default_value: default_value, directives: directives},
+        opts = %{depth: depth}
+      ) do
     indent = :binary.copy("  ", depth)
 
     [
-      Wormwood.SDL.Utils.encode_description(description, depth),
+      Wormwood.SDL.Utils.encode_description(description, opts),
       indent,
       Wormwood.SDL.Utils.encode_name(name),
       ?:,
       ?\s,
-      Wormwood.SDL.Encoder.encode(type, depth),
-      Wormwood.SDL.Utils.encode_default_value(default_value, depth),
-      Wormwood.SDL.Utils.encode_directives(directives, depth),
+      Wormwood.SDL.Encoder.encode(type, opts),
+      Wormwood.SDL.Utils.encode_default_value(default_value, opts),
+      Wormwood.SDL.Utils.encode_directives(directives, opts),
       ?\n
     ]
   end

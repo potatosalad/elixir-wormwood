@@ -15,13 +15,13 @@ defmodule Wormwood.Language.SchemaDefinition do
 end
 
 defimpl Wormwood.SDL.Encoder, for: Wormwood.Language.SchemaDefinition do
-  def encode(%@for{description: description, directives: directives, fields: fields}, depth) do
-    {header, depth} = Wormwood.SDL.Utils.maybe_extend(description, "schema", depth)
+  def encode(%@for{description: description, directives: directives, fields: fields}, opts) do
+    {header, opts} = Wormwood.SDL.Utils.maybe_extend(description, "schema", opts)
 
     [
       header,
-      Wormwood.SDL.Utils.encode_directives(directives, depth),
-      Wormwood.SDL.Utils.encode_field_definitions(fields, depth),
+      Wormwood.SDL.Utils.encode_directives(directives, opts),
+      Wormwood.SDL.Utils.encode_field_definitions(fields, opts),
       ?\n
     ]
   end

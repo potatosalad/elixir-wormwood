@@ -19,38 +19,41 @@ defmodule Wormwood.Language.DirectiveDefinition do
 end
 
 defimpl Wormwood.SDL.Encoder, for: Wormwood.Language.DirectiveDefinition do
-  def encode(%@for{description: description, name: name, arguments: arguments, directives: directives, locations: locations}, depth) do
+  def encode(
+        %@for{description: description, name: name, arguments: arguments, directives: directives, locations: locations},
+        opts = %{depth: depth}
+      ) do
     indent = :binary.copy("  ", depth)
 
     [
-      Wormwood.SDL.Utils.encode_description(description, depth),
+      Wormwood.SDL.Utils.encode_description(description, opts),
       indent,
       "directive ",
       ?@,
       Wormwood.SDL.Utils.encode_name(name),
-      encode_input_arguments(arguments, depth),
-      Wormwood.SDL.Utils.encode_directives(directives, depth),
-      encode_locations(locations, depth),
+      encode_input_arguments(arguments, opts),
+      Wormwood.SDL.Utils.encode_directives(directives, opts),
+      encode_locations(locations, opts),
       ?\n
     ]
   end
 
   @doc false
-  defp encode_input_arguments(term, _depth) when is_nil(term) or term == [] do
+  defp encode_input_arguments(term, _opts) when is_nil(term) or term == [] do
     []
   end
 
-  defp encode_input_arguments(list = [_ | _], depth) do
+  defp encode_input_arguments(list = [_ | _], opts = %{depth: depth}) do
     indent = :binary.copy("  ", depth)
-    [?(, ?\n, Enum.map(list, &Wormwood.SDL.Encoder.encode(&1, depth + 1)), indent, ?)]
+    [?(, ?\n, Enum.map(list, &Wormwood.SDL.Encoder.encode(&1, %{opts | depth: depth + 1})), indent, ?)]
   end
 
   @doc false
-  defp encode_locations(term, _depth) when is_nil(term) or term == [] do
+  defp encode_locations(term, _opts) when is_nil(term) or term == [] do
     []
   end
 
-  defp encode_locations(list = [_ | _], _depth) do
+  defp encode_locations(list = [_ | _], _opts) do
     [[?\s, ?|, ?\s | head] | tail] = Enum.map(list, &[?\s, ?|, ?\s, to_string(&1)])
     [?\s, ?o, ?n, ?\s, head | tail]
   end

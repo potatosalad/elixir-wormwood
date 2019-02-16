@@ -1,69 +1,110 @@
 defmodule Wormwood.SDL.Utils do
-  @spec encode_arguments(term(), non_neg_integer()) :: iodata()
-  def encode_arguments(term, _depth) when is_nil(term) or term == [] do
+  @type opts() :: Wormwood.SDL.Encoder.Opts.t()
+
+  @spec encode_arguments(term(), opts()) :: iodata()
+  def encode_arguments(term, _opts) when is_nil(term) or term == [] do
     []
   end
 
-  def encode_arguments(list = [_ | _], depth) do
-    [[?,, ?\s | head] | tail] = Enum.map(list, &[?,, ?\s, Wormwood.SDL.Encoder.encode(&1, depth)])
+  def encode_arguments(list = [_ | _], opts) do
+    [[?,, ?\s | head] | tail] = Enum.map(list, &[?,, ?\s, Wormwood.SDL.Encoder.encode(&1, opts)])
     [?(, head, tail, ?)]
   end
 
-  @spec encode_default_value(term(), non_neg_integer()) :: iodata()
-  def encode_default_value(nil, _depth) do
+  @spec encode_default_value(term(), opts()) :: iodata()
+  def encode_default_value(nil, _opts) do
     []
   end
 
-  def encode_default_value(default_value, depth) do
-    [?\s, ?=, ?\s, Wormwood.SDL.Encoder.encode(default_value, depth)]
+  def encode_default_value(default_value, opts) do
+    [?\s, ?=, ?\s, Wormwood.SDL.Encoder.encode(default_value, opts)]
   end
 
-  @spec encode_directives(term(), non_neg_integer()) :: iodata()
-  def encode_directives(term, _depth) when is_nil(term) or term == [] do
+  @spec encode_directives(term(), opts()) :: iodata()
+  def encode_directives(term, _opts) when is_nil(term) or term == [] do
     []
   end
 
-  def encode_directives(list = [_ | _], depth) do
-    Enum.map(list, &[?\s, Wormwood.SDL.Encoder.encode(&1, depth)])
+  def encode_directives(list = [_ | _], opts) do
+    Enum.map(list, &[?\s, Wormwood.SDL.Encoder.encode(&1, opts)])
   end
 
-  @spec encode_description(term(), non_neg_integer()) :: iodata()
-  def encode_description(nil, _depth) do
+  @spec encode_description(term(), opts()) :: iodata()
+  def encode_description(nil, _opts) do
     []
   end
 
-  def encode_description(description, depth) do
+  def encode_description(description, _opts = %{depth: depth}) do
     indent = :binary.copy("  ", depth)
-    [indent, OJSON.encode!(description), ?\n]
+    pattern = :binary.compile_pattern([<<?\r, ?\n>>, <<?\n>>, <<?\r>>])
+
+    case :binary.match(description, pattern) do
+      :nomatch ->
+        encoded = triple_quote_fix(OJSON.encode!(description), <<>>)
+        [indent, ?", ?", ?", :binary.part(encoded, 1, byte_size(encoded) - 2), ?", ?", ?", ?\n]
+
+      {_, _} ->
+        lines = :binary.split(description, pattern, [:global])
+
+        [
+          indent,
+          ?",
+          ?",
+          ?",
+          ?\n,
+          for line <- lines, into: [] do
+            encoded = triple_quote_fix(OJSON.encode!(line), <<>>)
+            [indent, :binary.part(encoded, 1, byte_size(encoded) - 2), ?\n]
+          end,
+          indent,
+          ?",
+          ?",
+          ?",
+          ?\n
+        ]
+    end
   end
 
-  @spec encode_enum_values(term(), non_neg_integer()) :: iodata()
-  def encode_enum_values(term, _depth) when is_nil(term) or term == [] do
+  @doc false
+  defp triple_quote_fix(<<?\\, ?", ?\\, ?", ?\\, ?", rest::binary()>>, acc) do
+    triple_quote_fix(rest, <<acc::binary(), ?\\, ?", ?", ?">>)
+  end
+
+  defp triple_quote_fix(<<c, rest::binary()>>, acc) do
+    triple_quote_fix(rest, <<acc::binary(), c>>)
+  end
+
+  defp triple_quote_fix(<<>>, acc) do
+    acc
+  end
+
+  @spec encode_enum_values(term(), opts()) :: iodata()
+  def encode_enum_values(term, _opts) when is_nil(term) or term == [] do
     []
   end
 
-  def encode_enum_values(list = [_ | _], depth) do
+  def encode_enum_values(list = [_ | _], opts = %{depth: depth}) do
     indent = :binary.copy("  ", depth)
-    [?\s, ?{, ?\n, Enum.map(list, &Wormwood.SDL.Encoder.encode(&1, depth + 1)), indent, ?}]
+    [?\s, ?{, ?\n, Enum.map(list, &Wormwood.SDL.Encoder.encode(&1, %{opts | depth: depth + 1})), indent, ?}]
   end
 
-  @spec encode_field_definitions(term(), non_neg_integer()) :: iodata()
-  def encode_field_definitions(term, _depth) when is_nil(term) or term == [] do
+  @spec encode_field_definitions(term(), opts()) :: iodata()
+  def encode_field_definitions(term, _opts) when is_nil(term) or term == [] do
     []
   end
 
-  def encode_field_definitions(field_definitions, depth) do
+  def encode_field_definitions(field_definitions, opts = %{depth: depth}) do
     indent = :binary.copy("  ", depth)
-    [?\s, ?{, ?\n, Enum.map(field_definitions, &Wormwood.SDL.Encoder.encode(&1, depth + 1)), indent, ?}]
+    [?\s, ?{, ?\n, Enum.map(field_definitions, &Wormwood.SDL.Encoder.encode(&1, %{opts | depth: depth + 1})), indent, ?}]
   end
 
-  @spec encode_interfaces(term(), non_neg_integer()) :: iodata()
-  def encode_interfaces(term, _depth) when is_nil(term) or term == [] do
+  @spec encode_interfaces(term(), opts()) :: iodata()
+  def encode_interfaces(term, _opts) when is_nil(term) or term == [] do
     []
   end
 
-  def encode_interfaces(list = [_ | _], depth) do
-    [[?\s, ?&, ?\s | head] | tail] = Enum.map(list, &[?\s, ?&, ?\s, Wormwood.SDL.Encoder.encode(&1, depth)])
+  def encode_interfaces(list = [_ | _], opts) do
+    [[?\s, ?&, ?\s | head] | tail] = Enum.map(list, &[?\s, ?&, ?\s, Wormwood.SDL.Encoder.encode(&1, opts)])
     [" implements ", head | tail]
   end
 
@@ -76,60 +117,60 @@ defmodule Wormwood.SDL.Utils do
     to_string(name)
   end
 
-  @spec encode_selection_set(term(), non_neg_integer()) :: iodata()
-  def encode_selection_set(term, _depth) when is_nil(term) or term == [] do
+  @spec encode_selection_set(term(), opts()) :: iodata()
+  def encode_selection_set(term, _opts) when is_nil(term) or term == [] do
     []
   end
 
-  def encode_selection_set(%{selections: []}, _depth) do
+  def encode_selection_set(%{selections: []}, _opts) do
     []
   end
 
-  def encode_selection_set(selection_set, depth) do
-    [?\s | Wormwood.SDL.Encoder.encode(selection_set, depth)]
+  def encode_selection_set(selection_set, opts) do
+    [?\s | Wormwood.SDL.Encoder.encode(selection_set, opts)]
   end
 
-  @spec encode_type_condition(term(), non_neg_integer()) :: iodata()
-  def encode_type_condition(nil, _depth) do
+  @spec encode_type_condition(term(), opts()) :: iodata()
+  def encode_type_condition(nil, _opts) do
     []
   end
 
-  def encode_type_condition(type_condition, depth) do
-    [" on " | Wormwood.SDL.Encoder.encode(type_condition, depth)]
+  def encode_type_condition(type_condition, opts) do
+    [" on " | Wormwood.SDL.Encoder.encode(type_condition, opts)]
   end
 
-  @spec encode_union_types(term(), non_neg_integer()) :: iodata()
-  def encode_union_types(term, _depth) when is_nil(term) or term == [] do
+  @spec encode_union_types(term(), opts()) :: iodata()
+  def encode_union_types(term, _opts) when is_nil(term) or term == [] do
     []
   end
 
-  def encode_union_types(list = [_ | _], depth) do
-    [[?\s, ?|, ?\s | head] | tail] = Enum.map(list, &[?\s, ?|, ?\s, Wormwood.SDL.Encoder.encode(&1, depth)])
+  def encode_union_types(list = [_ | _], opts) do
+    [[?\s, ?|, ?\s | head] | tail] = Enum.map(list, &[?\s, ?|, ?\s, Wormwood.SDL.Encoder.encode(&1, opts)])
     [?\s, ?=, ?\s, head | tail]
   end
 
-  def maybe_extend(description, label, depth) when is_integer(depth) and depth >= 0 do
+  def maybe_extend(description, label, opts = %{depth: depth}) when is_integer(depth) and depth >= 0 do
     indent = :binary.copy("  ", depth)
 
     header = [
-      encode_description(description, depth),
+      encode_description(description, opts),
       indent,
       label
     ]
 
-    {header, depth}
+    {header, opts}
   end
 
-  def maybe_extend(description, label, {:extend, prefix, depth}) when is_integer(depth) and depth >= 0 do
+  def maybe_extend(description, label, {:extend, prefix, opts = %{depth: depth}}) when is_integer(depth) and depth >= 0 do
     indent = :binary.copy("  ", depth)
 
     header = [
-      encode_description(description, depth),
+      encode_description(description, opts),
       indent,
       prefix,
       label
     ]
 
-    {header, depth}
+    {header, opts}
   end
 end

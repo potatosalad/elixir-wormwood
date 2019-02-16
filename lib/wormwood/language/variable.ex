@@ -11,7 +11,7 @@ defmodule Wormwood.Language.Variable do
 end
 
 defimpl Wormwood.SDL.Encoder, for: Wormwood.Language.Variable do
-  def encode(%@for{name: name}, _depth) when is_binary(name) do
+  def encode(%@for{name: name}, _opts) when is_binary(name) do
     [?$, name]
   end
 end

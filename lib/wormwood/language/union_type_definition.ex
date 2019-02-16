@@ -17,14 +17,14 @@ defmodule Wormwood.Language.UnionTypeDefinition do
 end
 
 defimpl Wormwood.SDL.Encoder, for: Wormwood.Language.UnionTypeDefinition do
-  def encode(%@for{description: description, name: name, types: types, directives: directives}, depth) do
-    {header, depth} = Wormwood.SDL.Utils.maybe_extend(description, "union ", depth)
+  def encode(%@for{description: description, name: name, types: types, directives: directives}, opts) do
+    {header, opts} = Wormwood.SDL.Utils.maybe_extend(description, "union ", opts)
 
     [
       header,
       Wormwood.SDL.Utils.encode_name(name),
-      Wormwood.SDL.Utils.encode_directives(directives, depth),
-      Wormwood.SDL.Utils.encode_union_types(types, depth),
+      Wormwood.SDL.Utils.encode_directives(directives, opts),
+      Wormwood.SDL.Utils.encode_union_types(types, opts),
       ?\n
     ]
   end

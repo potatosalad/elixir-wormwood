@@ -13,7 +13,7 @@ defmodule Wormwood.Language.BooleanValue do
 end
 
 defimpl Wormwood.SDL.Encoder, for: Wormwood.Language.BooleanValue do
-  def encode(%@for{value: value}, _depth) do
+  def encode(%@for{value: value}, _opts) do
     OJSON.encode!(value)
   end
 end

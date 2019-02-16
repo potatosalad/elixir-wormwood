@@ -11,7 +11,7 @@ defmodule Wormwood.Language.NullValue do
 end
 
 defimpl Wormwood.SDL.Encoder, for: Wormwood.Language.NullValue do
-  def encode(%@for{}, _depth) do
+  def encode(%@for{}, _opts) do
     OJSON.encode!(nil)
   end
 end

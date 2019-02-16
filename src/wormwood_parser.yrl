@@ -185,14 +185,14 @@ TypeDefinition -> DescriptionDefinition InputObjectTypeDefinition : put_descript
 TypeDefinition -> DescriptionDefinition DirectiveDefinition : put_description('$2', '$1').
 
 DirectiveDefinition -> 'directive' '@' Name 'on' DirectiveDefinitionLocations :
-  build_ast_node('DirectiveDefinition', #{'name' => extract_binary('$3'), 'locations' =>'$5'}, extract_location('$1')).
+  build_ast_node('DirectiveDefinition', #{'name' => extract_binary('$3'), 'locations' => extract_directive_locations('$5')}, extract_location('$1')).
 DirectiveDefinition -> 'directive' '@' Name ArgumentsDefinition 'on' DirectiveDefinitionLocations :
-  build_ast_node('DirectiveDefinition', #{'name' => extract_binary('$3'), 'arguments' => '$4', 'locations' =>'$6'}, extract_location('$1')).
+  build_ast_node('DirectiveDefinition', #{'name' => extract_binary('$3'), 'arguments' => '$4', 'locations' => extract_directive_locations('$6')}, extract_location('$1')).
 
 DirectiveDefinition -> 'directive' '@' Name 'on' DirectiveDefinitionLocations Directives :
-  build_ast_node('DirectiveDefinition', #{'name' => extract_binary('$3'), 'directives' => '$6', 'locations' => '$5'}, extract_location('$1')).
+  build_ast_node('DirectiveDefinition', #{'name' => extract_binary('$3'), 'directives' => '$6', 'locations' => extract_directive_locations('$5')}, extract_location('$1')).
 DirectiveDefinition -> 'directive' '@' Name ArgumentsDefinition 'on' DirectiveDefinitionLocations Directives :
-  build_ast_node('DirectiveDefinition', #{'name' => extract_binary('$3'), 'arguments' => '$4', 'directives' => '$7', 'locations' =>'$6'}, extract_location('$1')).
+  build_ast_node('DirectiveDefinition', #{'name' => extract_binary('$3'), 'arguments' => '$4', 'directives' => '$7', 'locations' => extract_directive_locations('$6')}, extract_location('$1')).
 
 SchemaDefinition -> 'schema' : build_ast_node('SchemaDefinition', #{}, extract_location('$1')).
 SchemaDefinition -> 'schema' Directives : build_ast_node('SchemaDefinition', #{'directives' => '$2'}, extract_location('$1')).
@@ -395,7 +395,7 @@ hexlist_to_utf8_binary(HexList) ->
 % Block String
 
 extract_quoted_block_string_token({_Token, _Loc, Value}) ->
-  iolist_to_binary(process_block_string(lists:sublist(Value, 4, length(Value) - 6))).
+  unicode:characters_to_binary(process_block_string(lists:sublist(Value, 4, length(Value) - 6))).
 
 -spec process_block_string(string()) -> string().
 process_block_string(Escaped) ->
@@ -410,7 +410,7 @@ process_block_string([H | T], Acc) -> process_block_string(T, [H | Acc]).
 
 -spec block_string_value(string()) -> string().
 block_string_value(Value) ->
-  [FirstLine | Rest] = re:split(Value, "\n", [{return,list}]),
+  [FirstLine | Rest] = string:split(Value, "\n", all),
   Prefix = indentation_prefix(common_indent(Rest)),
   UnindentedLines = unindent(Rest, Prefix),
   Lines = trim_blank_lines([FirstLine | UnindentedLines]),
@@ -508,3 +508,18 @@ extract_boolean({_Token, _Loc, "true"}) ->
   true;
 extract_boolean({_Token, _Loc, "false"}) ->
   false.
+
+% Directive Placement
+
+do_extract_directive_locations([], Converted) ->
+  Converted;
+do_extract_directive_locations([LocationBinary | Tail], Converted) ->
+  LocationAtom = to_directive_location_atom(LocationBinary),
+  do_extract_directive_locations(Tail, [LocationAtom | Converted]).
+
+to_directive_location_atom(Name) ->
+  erlang:binary_to_atom(string:lowercase(Name), utf8).
+
+extract_directive_locations(Locations) ->
+  Result = do_extract_directive_locations(Locations, []),
+  lists:sort(Result).

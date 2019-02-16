@@ -18,14 +18,14 @@ defmodule Wormwood.Language.EnumValueDefinition do
 end
 
 defimpl Wormwood.SDL.Encoder, for: Wormwood.Language.EnumValueDefinition do
-  def encode(%@for{description: description, value: value, directives: directives}, depth) do
+  def encode(%@for{description: description, value: value, directives: directives}, opts = %{depth: depth}) do
     indent = :binary.copy("  ", depth)
 
     [
-      Wormwood.SDL.Utils.encode_description(description, depth),
+      Wormwood.SDL.Utils.encode_description(description, opts),
       indent,
       to_string(value),
-      Wormwood.SDL.Utils.encode_directives(directives, depth),
+      Wormwood.SDL.Utils.encode_directives(directives, opts),
       ?\n
     ]
   end

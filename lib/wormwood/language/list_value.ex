@@ -11,8 +11,8 @@ defmodule Wormwood.Language.ListValue do
 end
 
 defimpl Wormwood.SDL.Encoder, for: Wormwood.Language.ListValue do
-  def encode(%@for{values: values}, depth) do
-    [[?,, ?\s | head] | tail] = Enum.map(values, &[?,, ?\s, Wormwood.SDL.Encoder.encode(&1, depth)])
+  def encode(%@for{values: values}, opts) do
+    [[?,, ?\s | head] | tail] = Enum.map(values, &[?,, ?\s, Wormwood.SDL.Encoder.encode(&1, opts)])
     [?[, head, tail, ?]]
   end
 end

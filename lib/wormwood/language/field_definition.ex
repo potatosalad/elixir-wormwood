@@ -19,18 +19,21 @@ defmodule Wormwood.Language.FieldDefinition do
 end
 
 defimpl Wormwood.SDL.Encoder, for: Wormwood.Language.FieldDefinition do
-  def encode(%@for{description: description, name: name, arguments: arguments, type: type, directives: directives}, depth) do
+  def encode(
+        %@for{description: description, name: name, arguments: arguments, type: type, directives: directives},
+        opts = %{depth: depth}
+      ) do
     indent = :binary.copy("  ", depth)
 
     [
-      Wormwood.SDL.Utils.encode_description(description, depth),
+      Wormwood.SDL.Utils.encode_description(description, opts),
       indent,
       Wormwood.SDL.Utils.encode_name(name),
-      encode_input_arguments(arguments, depth),
+      encode_input_arguments(arguments, opts),
       ?:,
       ?\s,
-      Wormwood.SDL.Encoder.encode(type, depth),
-      Wormwood.SDL.Utils.encode_directives(directives, depth),
+      Wormwood.SDL.Encoder.encode(type, opts),
+      Wormwood.SDL.Utils.encode_directives(directives, opts),
       ?\n
     ]
   end
@@ -40,8 +43,8 @@ defimpl Wormwood.SDL.Encoder, for: Wormwood.Language.FieldDefinition do
     []
   end
 
-  defp encode_input_arguments(list = [_ | _], depth) do
+  defp encode_input_arguments(list = [_ | _], opts = %{depth: depth}) do
     indent = :binary.copy("  ", depth)
-    [?(, ?\n, Enum.map(list, &Wormwood.SDL.Encoder.encode(&1, depth + 1)), indent, ?)]
+    [?(, ?\n, Enum.map(list, &Wormwood.SDL.Encoder.encode(&1, %{opts | depth: depth + 1})), indent, ?)]
   end
 end

@@ -19,15 +19,15 @@ defmodule Wormwood.Language.ObjectTypeDefinition do
 end
 
 defimpl Wormwood.SDL.Encoder, for: Wormwood.Language.ObjectTypeDefinition do
-  def encode(%@for{description: description, name: name, directives: directives, interfaces: interfaces, fields: fields}, depth) do
-    {header, depth} = Wormwood.SDL.Utils.maybe_extend(description, "type ", depth)
+  def encode(%@for{description: description, name: name, directives: directives, interfaces: interfaces, fields: fields}, opts) do
+    {header, opts} = Wormwood.SDL.Utils.maybe_extend(description, "type ", opts)
 
     [
       header,
       Wormwood.SDL.Utils.encode_name(name),
-      Wormwood.SDL.Utils.encode_interfaces(interfaces, depth),
-      Wormwood.SDL.Utils.encode_directives(directives, depth),
-      Wormwood.SDL.Utils.encode_field_definitions(fields, depth),
+      Wormwood.SDL.Utils.encode_interfaces(interfaces, opts),
+      Wormwood.SDL.Utils.encode_directives(directives, opts),
+      Wormwood.SDL.Utils.encode_field_definitions(fields, opts),
       ?\n
     ]
   end

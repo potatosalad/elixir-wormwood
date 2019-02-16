@@ -12,7 +12,7 @@ defmodule Wormwood.Language.FragmentSpread do
 end
 
 defimpl Wormwood.SDL.Encoder, for: Wormwood.Language.FragmentSpread do
-  def encode(%@for{name: name, directives: directives}, depth) do
+  def encode(%@for{name: name, directives: directives}, opts = %{depth: depth}) do
     indent = :binary.copy("  ", depth)
 
     [
@@ -21,7 +21,7 @@ defimpl Wormwood.SDL.Encoder, for: Wormwood.Language.FragmentSpread do
       ?.,
       ?.,
       Wormwood.SDL.Utils.encode_name(name),
-      Wormwood.SDL.Utils.encode_directives(directives, depth),
+      Wormwood.SDL.Utils.encode_directives(directives, opts),
       ?\n
     ]
   end

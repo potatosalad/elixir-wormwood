@@ -15,13 +15,13 @@ defmodule Wormwood.Language.ScalarTypeDefinition do
 end
 
 defimpl Wormwood.SDL.Encoder, for: Wormwood.Language.ScalarTypeDefinition do
-  def encode(%@for{description: description, name: name, directives: directives}, depth) do
-    {header, depth} = Wormwood.SDL.Utils.maybe_extend(description, "scalar ", depth)
+  def encode(%@for{description: description, name: name, directives: directives}, opts) do
+    {header, opts} = Wormwood.SDL.Utils.maybe_extend(description, "scalar ", opts)
 
     [
       header,
       Wormwood.SDL.Utils.encode_name(name),
-      Wormwood.SDL.Utils.encode_directives(directives, depth),
+      Wormwood.SDL.Utils.encode_directives(directives, opts),
       ?\n
     ]
   end

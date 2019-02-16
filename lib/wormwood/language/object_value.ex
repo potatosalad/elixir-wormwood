@@ -11,8 +11,8 @@ defmodule Wormwood.Language.ObjectValue do
 end
 
 defimpl Wormwood.SDL.Encoder, for: Wormwood.Language.ObjectValue do
-  def encode(%@for{fields: fields}, depth) do
-    [[?,, ?\s | head] | tail] = Enum.map(fields, &[?,, ?\s, Wormwood.SDL.Encoder.encode(&1, depth)])
+  def encode(%@for{fields: fields}, opts) do
+    [[?,, ?\s | head] | tail] = Enum.map(fields, &[?,, ?\s, Wormwood.SDL.Encoder.encode(&1, opts)])
     [?{, head, tail, ?}]
   end
 end

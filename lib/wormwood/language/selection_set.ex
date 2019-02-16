@@ -13,8 +13,8 @@ defmodule Wormwood.Language.SelectionSet do
 end
 
 defimpl Wormwood.SDL.Encoder, for: Wormwood.Language.SelectionSet do
-  def encode(%@for{selections: selections}, depth) when is_list(selections) and length(selections) > 0 do
+  def encode(%@for{selections: selections}, opts = %{depth: depth}) when is_list(selections) and length(selections) > 0 do
     indent = :binary.copy("  ", depth)
-    [?{, ?\n, Enum.map(selections, &Wormwood.SDL.Encoder.encode(&1, depth + 1)), indent, ?}]
+    [?{, ?\n, Enum.map(selections, &Wormwood.SDL.Encoder.encode(&1, %{opts | depth: depth + 1})), indent, ?}]
   end
 end
