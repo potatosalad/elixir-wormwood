@@ -57,6 +57,14 @@ defmodule Wormwood.SDL.Utils do
   end
 
   @doc false
+  defp escape_triple_quote(
+         <<"Directs the executor to include this field or fragment only when the `if` argument is true.\"">>,
+         <<>>
+       ) do
+    # Temporary workaround for absinthe bug.
+    <<"Directs the executor to include this field or fragment only when the `if` argument is true.">>
+  end
+
   defp escape_triple_quote(<<?", ?", ?", rest::binary()>>, acc) do
     escape_triple_quote(rest, <<acc::binary(), ?\\, ?", ?", ?">>)
   end
