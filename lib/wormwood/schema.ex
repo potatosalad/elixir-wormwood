@@ -45,8 +45,8 @@ defmodule Wormwood.Schema do
         definitions =
           Enum.sort_by(definitions, fn
             %Wormwood.Language.SchemaDefinition{} -> {0, :schema}
-            %Wormwood.Language.DirectiveDefinition{name: name} -> {1, name}
-            %{__struct__: _module, name: name} -> {2, name}
+            %Wormwood.Language.DirectiveDefinition{name: name} -> {1, String.downcase(name), name}
+            %{__struct__: _module, name: name} -> {2, String.downcase(name), name}
             %{__struct__: module} -> {3, module}
           end)
 
